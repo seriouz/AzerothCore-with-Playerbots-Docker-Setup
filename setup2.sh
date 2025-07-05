@@ -84,10 +84,13 @@ if ask_user "Install modules?"; then
         local mod_name=$1
         local repo_url=$2
         if [ -d "${mod_name}" ]; then
-            echo "${mod_name} exists. Skipping..."
+            echo "📁 ${mod_name} exists. Pulling latest changes..."
+            cd "${mod_name}"
+            git pull
+            cd ..
         else
             if ask_user "Install ${mod_name}?"; then
-                git clone "${repo_url}"
+                git clone "${repo_url}" "${mod_name}"
             fi
         fi
     }

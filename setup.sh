@@ -12,6 +12,8 @@ sed -i "s|^TZ=.*$|TZ=$(cat /etc/timezone)|" src/.env
 
 sudo apt update
 
+azerothcoredir=""
+
 # Check if MySQL client is installed
 if ! command -v mysql &> /dev/null
 then
@@ -66,13 +68,14 @@ if [ -d "azerothcore-wotlk" ]; then
     cp src/.env azerothcore-wotlk/
     cp src/*.yml azerothcore-wotlk/
     cd azerothcore-wotlk
+    azerothcoredir=$(pwd)
 else
     if ask_user "Download and install AzerothCore Playerbots?"; then
-        git clone https://github.com/liyunfan1223/azerothcore-wotlk.git --branch=Playerbot
+        git clone --depth=1 https://github.com/liyunfan1223/azerothcore-wotlk.git --branch=Playerbot
         cp src/.env azerothcore-wotlk/
         cp src/*.yml azerothcore-wotlk/
         cd azerothcore-wotlk/modules
-        git clone https://github.com/liyunfan1223/mod-playerbots.git --branch=master
+        git clone --depth=1 https://github.com/liyunfan1223/mod-playerbots.git --branch=master
         cd ..
     else
         echo "Aborting..."
@@ -100,7 +103,15 @@ if ask_user "Install modules?"; then
     install_mod "mod-aoe-loot" "https://github.com/azerothcore/mod-aoe-loot.git"
     install_mod "mod-learn-spells" "https://github.com/noisiver/mod-learnspells.git"
     install_mod "mod-fireworks-on-level" "https://github.com/azerothcore/mod-fireworks-on-level.git"
-    install_mod "mod-individual-progression" "https://github.com/ZhengPeiRu21/mod-individual-progression.git"
+#    install_mod "mod-individual-progression" "https://github.com/ZhengPeiRu21/mod-individual-progression.git"
+    install_mod "mod-ah-bot" "https://github.com/azerothcore/mod-ah-bot.git"
+    apply_mod_sqls_and_conf "mod-ah-bot"
+    install_mod "mod-transmog" "https://github.com/azerothcore/mod-transmog.git"
+    apply_mod_sqls_and_conf "mod-transmog"
+    install_mod "mod-solocraft" "https://github.com/azerothcore/mod-solocraft.git"
+    apply_mod_sqls_and_conf "mod-solocraft"
+    install_mod "mod-eluna" "https://github.com/azerothcore/mod-eluna.git"
+    install_mod "mod-account-mounts" "https://github.com/azerothcore/mod-account-mounts.git"
 
     cd ..
 
@@ -143,6 +154,60 @@ function execute_sql() {
     else
         echo "No SQL files found in $custom_sql_dir/$db_name, skipping..."
     fi
+}
+
+# Function to execute Mod SQL files and copy conf files
+function apply_mod_sqls_and_conf() {
+    local mod_name="$1"
+    local mod_sql_paths=(
+        "./sql"
+        "./data/sql"
+    )
+
+    cd $mod_name
+
+    echo "Applying SQL files for mod: $mod_name"
+
+    for base_path in "${mod_sql_paths[@]}"; do
+        if [ ! -d "$base_path" ]; then
+            continue
+        fi
+
+        while IFS= read -r -d '' sql_file; do
+            if [[ "$sql_file" == */world/* ]]; then
+                db="world"
+            elif [[ "$sql_file" == */characters/* ]]; then
+                db="characters"
+            elif [[ "$sql_file" == */auth/* ]]; then
+                db="auth"
+            else
+                echo "⚠️  Unknown target DB for file: $sql_file"
+                continue
+            fi
+
+            echo "Executing $sql_file on $db"
+            temp_sql_file=$(mktemp)
+
+            if [[ "$(basename "$sql_file")" == "update_realmlist.sql" ]]; then
+                sed -e "s/{{IP_ADDRESS}}/$ip_address/g" "$sql_file" > "$temp_sql_file"
+            else
+                cp "$sql_file" "$temp_sql_file"
+            fi
+
+            mysql -h "$ip_address" -uroot -ppassword "$db" < "$temp_sql_file"
+        done < <(find "$base_path" -type f -name "*.sql" -print0)
+    done
+
+    echo "Copying .conf.dist files for mod: $mod_name"
+
+    while IFS= read -r -d '' conf_dist_file; do
+        conf_name="$(basename "$conf_dist_file" .dist)"
+        target_path="$azerothcoredir/env/dist/etc/modules/$conf_name"
+
+        echo "Copying $(basename "$conf_dist_file") to $target_path"
+        mkdir -p "$(dirname "$target_path")"
+        cp "$conf_dist_file" "$target_path"
+    done < <(find "./conf" -type f -name "*.conf.dist" -print0)
 }
 
 # Run custom SQL files

@@ -14,6 +14,12 @@ sed -i "s|^TZ=.*$|TZ=$(cat /etc/timezone)|" src/.env
 
 sudo apt update
 
+if ! command -v yq &> /dev/null; then
+    echo "Installing yq..."
+    sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/local/bin/yq
+    sudo chmod +x /usr/local/bin/yq
+fi
+
 azerothcoredir=""
 
 # MariaDB-Client prüfen
@@ -75,6 +81,7 @@ world="acore_world"
 chars="acore_characters"
 ip_address=$(hostname -I | awk '{print $1}')
 temp_sql_file="/tmp/temp_custom_sql.sql"
+override_file="azerothcore-wotlk/docker-compose.override.yml"
 
 # Modulinstallation
 if ask_user "Install modules?"; then
@@ -161,6 +168,10 @@ if ask_user "Install modules?"; then
     cd ../..
 fi
 
+mkdir database
+yq eval -i '
+  .services.ac-database.volumes += ["./../database:/var/lib/mysql:rw"]
+' "$override_file"
 sudo chown -R 1000:1000 azerothcore-wotlk/env/dist/etc azerothcore-wotlk/env/dist/logs
 
 docker compose -f azerothcore-wotlk/docker-compose.yml up -d --build

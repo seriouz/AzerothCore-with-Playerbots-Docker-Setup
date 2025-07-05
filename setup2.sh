@@ -69,6 +69,13 @@ else
     fi
 fi
 
+custom_sql_dir="src/sql"
+auth="acore_auth"
+world="acore_world"
+chars="acore_characters"
+ip_address=$(hostname -I | awk '{print $1}')
+temp_sql_file="/tmp/temp_custom_sql.sql"
+
 # Modulinstallation
 if ask_user "Install modules?"; then
     cd azerothcore-wotlk/modules
@@ -152,13 +159,6 @@ sudo chown -R 1000:1000 azerothcore-wotlk/env/dist/etc azerothcore-wotlk/env/dis
 docker compose -f azerothcore-wotlk/docker-compose.yml up -d --build
 
 sudo chown -R 1000:1000 wotlk
-
-custom_sql_dir="src/sql"
-auth="acore_auth"
-world="acore_world"
-chars="acore_characters"
-ip_address=$(hostname -I | awk '{print $1}')
-temp_sql_file="/tmp/temp_custom_sql.sql"
 
 function execute_sql() {
     local db_name=$1

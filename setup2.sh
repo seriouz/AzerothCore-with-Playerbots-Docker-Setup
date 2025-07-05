@@ -147,7 +147,7 @@ if ask_user "Install modules?"; then
     }
 
     install_mod "mod-aoe-loot" "https://github.com/azerothcore/mod-aoe-loot.git"
-    install_mod "mod-learn-spells" "https://github.com/noisiver/mod-learnspells.git"
+    install_mod "mod-learnspells" "https://github.com/noisiver/mod-learnspells.git"
     install_mod "mod-fireworks-on-level" "https://github.com/azerothcore/mod-fireworks-on-level.git"
     install_mod "mod-ah-bot" "https://github.com/azerothcore/mod-ah-bot.git"
     apply_mod_sqls_and_conf "mod-ah-bot"

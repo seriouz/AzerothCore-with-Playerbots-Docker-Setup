@@ -126,7 +126,11 @@ if ask_user "Install modules?"; then
                 else
                     cp "$sql_file" "$temp_sql_file"
                 fi
-                mysql -h "$ip_address" -uroot -ppassword "$db" < "$temp_sql_file"
+
+                if ! mysql -h "$ip_address" -uroot -ppassword "$db" < "$temp_sql_file"; then
+                    echo "⚠️  SQL import failed for $sql_file, but continuing..."
+                fi
+
             done < <(find "$base_path" -type f -name "*.sql" -print0)
         done
 

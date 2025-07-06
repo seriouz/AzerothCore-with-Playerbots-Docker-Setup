@@ -85,15 +85,15 @@ temp_sql_file="/tmp/temp_custom_sql.sql"
 override_file="azerothcore-wotlk/docker-compose.override.yml"
 
 yq eval -i '
-  .services.ac-database.volumes += [
-    "../database:/var/lib/mysql"
-  ]
+  if .services.ac-database.volumes | index("../database:/var/lib/mysql") == null 
+  then .services.ac-database.volumes += ["../database:/var/lib/mysql"] 
+  else . end
 ' "$override_file"
 
 yq eval -i '
-  .services.ac-worldserver.volumes += [
-    "./modules:/azerothcore/modules"
-  ]
+  if .services.ac-worldserver.volumes | index("./modules:/azerothcore/modules") == null 
+  then .services.ac-worldserver.volumes += ["./modules:/azerothcore/modules"] 
+  else . end
 ' "$override_file"
 
 sudo chown -R 1000:1000 azerothcore-wotlk/env/dist/etc azerothcore-wotlk/env/dist/logs
@@ -235,9 +235,9 @@ fi
 mkdir -p database
 
 yq eval -i '
-  .services.ac-worldserver.volumes += [
-    "./lua_scripts:/lua_scripts:ro"
-  ]
+  if .services.ac-worldserver.volumes | index("./lua_scripts:/lua_scripts:ro") == null
+  then .services.ac-worldserver.volumes += ["./lua_scripts:/lua_scripts:ro"]
+  else . end
 ' "$override_file"
 
 yq eval -i '

@@ -85,8 +85,14 @@ temp_sql_file="/tmp/temp_custom_sql.sql"
 override_file="azerothcore-wotlk/docker-compose.override.yml"
 
 yq eval -i '
-  .services.ac-database.volumes = [
+  .services.ac-database.volumes += [
     "../database:/var/lib/mysql"
+  ]
+' "$override_file"
+
+yq eval -i '
+  .services.ac-worldserver.volumes += [
+    "./modules:/azerothcore/modules"
   ]
 ' "$override_file"
 
@@ -229,13 +235,14 @@ fi
 mkdir -p database
 
 yq eval -i '
-  .services.ac-worldserver.volumes = [
+  .services.ac-worldserver.volumes += [
     "./lua_scripts:/lua_scripts:ro"
   ]
 ' "$override_file"
 
 yq eval -i '
-  .services.ac-worldserver.environment = {
+  .services.ac-worldserver.environment += {
+    "AC_UPDATES_ENABLE_DATABASES", "1",
     "AC_RATE_XP_KILL": "5",
     "AC_AI_PLAYERBOT_RANDOM_BOT_AUTOLOGIN": "0",
     "AC_ELUNA_LOAD_SCRIPTS": "1",

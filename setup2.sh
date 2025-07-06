@@ -119,7 +119,7 @@ function install_mod() {
     if [ -d "${mod_name}" ]; then
         echo "📁 ${mod_name} exists. Pulling latest changes..."
         cd "${mod_name}"
-        git pull
+        git pull --no-rebase
         cd ..
     else
         if ask_user "Install ${mod_name}?"; then
@@ -265,6 +265,8 @@ execute_sql "$world"
 execute_sql "$chars"
 
 rm -f "$temp_sql_file"
+
+docker restart ac-worldserver
 
 echo ""
 echo "✅ SETUP COMPLETED"

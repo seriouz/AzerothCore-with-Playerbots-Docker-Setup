@@ -92,18 +92,23 @@ yq eval -i '
 
 sudo chown -R 1000:1000 azerothcore-wotlk/env/dist/etc azerothcore-wotlk/env/dist/logs
 
-cd azerothcore-wotlk
-docker compose down
-cd ..
+if [ -d "azerothcore-wotlk" ]; then
+    echo "Skipping initial docker-compose..."
+else
+    cd azerothcore-wotlk
+    docker compose down
+    cd ..
 
-docker compose -f azerothcore-wotlk/docker-compose.yml -f azerothcore-wotlk/docker-compose.override.yml up -d --build
+    sudo chown -R 1000:1000 azerothcore-wotlk/env/dist/etc azerothcore-wotlk/env/dist/logs
+    docker compose -f azerothcore-wotlk/docker-compose.yml -f azerothcore-wotlk/docker-compose.override.yml up -d --build
+
+    sleep 60
+    cd azerothcore-wotlk
+    docker compose down
+    cd ..
+fi
 
 sudo chown -R 1000:1000 wotlk
-
-sleep 60
-cd azerothcore-wotlk
-docker compose down
-cd ..
 
 # Array zur Registrierung der Mods mit SQL
 registered_mod_sqls=()
@@ -131,6 +136,7 @@ function install_mod() {
 function apply_mod_conf() {
     local mod_name="$1"
     local conf_dir="azerothcore-wotlk/modules/$mod_name/conf"
+    echo "Looking for .conf.dist files in $conf_dir"
 
     if [ -d "$conf_dir" ]; then
         echo "Copying .conf.dist files for $mod_name"

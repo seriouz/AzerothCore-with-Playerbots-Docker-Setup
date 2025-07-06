@@ -67,7 +67,7 @@ else
         cp src/.env azerothcore-wotlk/
         cp src/*.yml azerothcore-wotlk/
         cd azerothcore-wotlk/modules
-        git clone --depth=1 https://github.com/liyunfan1223/mod-playerbots.git
+        git clone --depth=1 https://github.com/liyunfan1223/mod-playerbots.git --branch=master
         cd ../..
         azerothcoredir=$(pwd)/azerothcore-wotlk
     else
@@ -193,7 +193,7 @@ fi
 
 mkdir -p database
 yq eval -i '
-  .services.ac-database.volumes += ["./../database:/var/lib/mysql:rw"]
+  .services.ac-database.volumes += ["/home/serious/AzerothCore-with-Playerbots-Docker-Setup/database:/var/lib/mysql:rw"]
 ' "$override_file"
 sudo chown -R 1000:1000 azerothcore-wotlk/env/dist/etc azerothcore-wotlk/env/dist/logs
 

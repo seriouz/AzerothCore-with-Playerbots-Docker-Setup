@@ -192,12 +192,26 @@ if ask_user "Install modules?"; then
 fi
 
 mkdir -p database
+
 yq eval -i '
-  .services.ac-database.volumes += ["/home/serious/AzerothCore-with-Playerbots-Docker-Setup/database:/var/lib/mysql:rw"]
+  .services.ac-worldserver.volumes = [
+    "./modules:/azerothcore/modules:ro",
+    "./lua_scripts:/azerothcore/data/scripts:ro"
+  ]
 ' "$override_file"
+
+yq eval -i '
+  .services.ac-worldserver.environment = {
+    "AC_RATE_XP_KILL": "5",
+    "AC_AI_PLAYERBOT_RANDOM_BOT_AUTOLOGIN": "1",
+    "AC_ELUNA_LOAD_SCRIPTS": "1",
+    "AC_ELUNA_LUA_SCRIPTS_PATH": "/azerothcore/data/scripts"
+  }
+' "$override_file"
+
 sudo chown -R 1000:1000 azerothcore-wotlk/env/dist/etc azerothcore-wotlk/env/dist/logs
 
-docker compose -f azerothcore-wotlk/docker-compose.yml up -d --build
+docker compose -f azerothcore-wotlk/docker-compose.yml -f azerothcore-wotlk/docker-compose.override.yml up -d --build
 sudo chown -R 1000:1000 wotlk
 
 # Anwenden der registrierten SQLs

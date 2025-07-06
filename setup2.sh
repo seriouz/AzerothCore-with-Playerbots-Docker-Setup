@@ -195,7 +195,6 @@ mkdir -p database
 
 yq eval -i '
   .services.ac-worldserver.volumes = [
-    "./modules:/azerothcore/modules:ro",
     "./lua_scripts:/azerothcore/data/scripts:ro"
   ]
 ' "$override_file"
@@ -203,7 +202,7 @@ yq eval -i '
 yq eval -i '
   .services.ac-worldserver.environment = {
     "AC_RATE_XP_KILL": "5",
-    "AC_AI_PLAYERBOT_RANDOM_BOT_AUTOLOGIN": "1",
+    "AC_AI_PLAYERBOT_RANDOM_BOT_AUTOLOGIN": "0",
     "AC_ELUNA_LOAD_SCRIPTS": "1",
     "AC_ELUNA_LUA_SCRIPTS_PATH": "/azerothcore/data/scripts"
   }

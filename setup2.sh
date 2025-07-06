@@ -14,6 +14,7 @@ sed -i "s|^TZ=.*$|TZ=$(cat /etc/timezone)|" src/.env
 
 sudo apt update
 
+# yq installieren (wenn nicht vorhanden)
 if ! command -v yq &> /dev/null; then
     echo "Installing yq..."
     sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/local/bin/yq
@@ -83,64 +84,34 @@ ip_address=$(hostname -I | awk '{print $1}')
 temp_sql_file="/tmp/temp_custom_sql.sql"
 override_file="azerothcore-wotlk/docker-compose.override.yml"
 
-# Modulinstallation
-if ask_user "Install modules?"; then
-    cd azerothcore-wotlk/modules
+# Array zur Registrierung der Mods mit SQL
+registered_mod_sqls=()
 
-    function install_mod() {
-        local mod_name=$1
-        local repo_url=$2
-        if [ -d "${mod_name}" ]; then
-            echo "📁 ${mod_name} exists. Pulling latest changes..."
-            cd "${mod_name}"
-            git pull
-            cd ..
-        else
-            if ask_user "Install ${mod_name}?"; then
-                git clone "${repo_url}" "${mod_name}"
-            fi
+function register_mod_sqls() {
+    local mod_name="$1"
+    registered_mod_sqls+=("$mod_name")
+}
+
+function install_mod() {
+    local mod_name=$1
+    local repo_url=$2
+    if [ -d "${mod_name}" ]; then
+        echo "📁 ${mod_name} exists. Pulling latest changes..."
+        cd "${mod_name}"
+        git pull
+        cd ..
+    else
+        if ask_user "Install ${mod_name}?"; then
+            git clone "${repo_url}" "${mod_name}"
         fi
-    }
+    fi
+}
 
-    function apply_mod_sqls_and_conf() {
-        local mod_name="$1"
-        local mod_sql_paths=( "./sql" "./data/sql" )
+function apply_mod_conf() {
+    local mod_name="$1"
+    local conf_dir="azerothcore-wotlk/modules/$mod_name/conf"
 
-        pushd "$mod_name" > /dev/null || return
-
-        echo "Applying SQL files for $mod_name"
-        for base_path in "${mod_sql_paths[@]}"; do
-            if [ ! -d "$base_path" ]; then continue; fi
-
-            while IFS= read -r -d '' sql_file; do
-                path_lower=$(echo "$sql_file" | tr '[:upper:]' '[:lower:]')
-                local db=""
-                if [[ "$path_lower" == *world* ]]; then
-                    db="acore_world"
-                elif [[ "$path_lower" == *char* ]]; then
-                    db="acore_characters"
-                elif [[ "$path_lower" == *auth* ]]; then
-                    db="acore_auth"
-                else
-                    echo "⚠️  Unknown DB for: $sql_file"
-                    continue
-                fi
-
-                echo "→ Executing on $db: $sql_file"
-                temp_sql_file=$(mktemp)
-                if [[ "$(basename "$sql_file")" == "update_realmlist.sql" ]]; then
-                    sed -e "s/{{IP_ADDRESS}}/$ip_address/g" "$sql_file" > "$temp_sql_file"
-                else
-                    cp "$sql_file" "$temp_sql_file"
-                fi
-
-                if ! mysql -h "$ip_address" -uroot -ppassword "$db" < "$temp_sql_file"; then
-                    echo "⚠️  SQL import failed for $sql_file, but continuing..."
-                fi
-
-            done < <(find "$base_path" -type f -name "*.sql" -print0)
-        done
-
+    if [ -d "$conf_dir" ]; then
         echo "Copying .conf.dist files for $mod_name"
         while IFS= read -r -d '' conf_file; do
             conf_name="$(basename "$conf_file" .dist)"
@@ -148,35 +119,92 @@ if ask_user "Install modules?"; then
             mkdir -p "$(dirname "$target_path")"
             cp "$conf_file" "$target_path"
             echo "→ Copied: $conf_file → $target_path"
-        done < <(find "./conf" -type f -name "*.conf.dist" -print0)
+        done < <(find "$conf_dir" -type f -name "*.conf.dist" -print0)
+    fi
+}
 
-        popd > /dev/null
-    }
+function apply_mod_sqls() {
+    local mod_name="$1"
+    local mod_path="azerothcore-wotlk/modules/$mod_name"
+    local mod_sql_paths=( "./sql" "./data/sql" )
+
+    pushd "$mod_path" > /dev/null || return
+
+    echo "Applying SQL files for $mod_name"
+    for base_path in "${mod_sql_paths[@]}"; do
+        [ ! -d "$base_path" ] && continue
+
+        while IFS= read -r -d '' sql_file; do
+            path_lower=$(echo "$sql_file" | tr '[:upper:]' '[:lower:]')
+            local db=""
+            if [[ "$path_lower" == *world* ]]; then
+                db="acore_world"
+            elif [[ "$path_lower" == *char* ]]; then
+                db="acore_characters"
+            elif [[ "$path_lower" == *auth* ]]; then
+                db="acore_auth"
+            else
+                echo "⚠️  Unknown DB for: $sql_file"
+                continue
+            fi
+
+            echo "→ Executing on $db: $sql_file"
+            temp_sql_file=$(mktemp)
+            if [[ "$(basename "$sql_file")" == "update_realmlist.sql" ]]; then
+                sed -e "s/{{IP_ADDRESS}}/$ip_address/g" "$sql_file" > "$temp_sql_file"
+            else
+                cp "$sql_file" "$temp_sql_file"
+            fi
+
+            if ! mysql -h "$ip_address" -uroot -ppassword "$db" < "$temp_sql_file"; then
+                echo "⚠️  SQL import failed for $sql_file, but continuing..."
+            fi
+
+        done < <(find "$base_path" -type f -name "*.sql" -print0)
+    done
+
+    popd > /dev/null
+}
+
+# Modulinstallation
+if ask_user "Install modules?"; then
+    cd azerothcore-wotlk/modules
 
     install_mod "mod-aoe-loot" "https://github.com/azerothcore/mod-aoe-loot.git"
     install_mod "mod-learnspells" "https://github.com/noisiver/mod-learnspells.git"
     install_mod "mod-fireworks-on-level" "https://github.com/azerothcore/mod-fireworks-on-level.git"
     install_mod "mod-ah-bot" "https://github.com/azerothcore/mod-ah-bot.git"
-    apply_mod_sqls_and_conf "mod-ah-bot"
+    apply_mod_conf "mod-ah-bot"
+    register_mod_sqls "mod-ah-bot"
+
     install_mod "mod-transmog" "https://github.com/azerothcore/mod-transmog.git"
-    apply_mod_sqls_and_conf "mod-transmog"
+    apply_mod_conf "mod-transmog"
+    register_mod_sqls "mod-transmog"
+
     install_mod "mod-solocraft" "https://github.com/azerothcore/mod-solocraft.git"
-    apply_mod_sqls_and_conf "mod-solocraft"
+    apply_mod_conf "mod-solocraft"
+    register_mod_sqls "mod-solocraft"
+
     install_mod "mod-eluna" "https://github.com/azerothcore/mod-eluna.git"
     install_mod "mod-account-mounts" "https://github.com/azerothcore/mod-account-mounts.git"
 
     cd ../..
 fi
 
-mkdir database
+mkdir -p database
 yq eval -i '
   .services.ac-database.volumes += ["./../database:/var/lib/mysql:rw"]
 ' "$override_file"
 sudo chown -R 1000:1000 azerothcore-wotlk/env/dist/etc azerothcore-wotlk/env/dist/logs
 
 docker compose -f azerothcore-wotlk/docker-compose.yml up -d --build
-
 sudo chown -R 1000:1000 wotlk
+
+# Anwenden der registrierten SQLs
+for mod in "${registered_mod_sqls[@]}"; do
+    echo "▶ Applying registered SQLs for: $mod"
+    apply_mod_sqls "$mod"
+done
 
 function execute_sql() {
     local db_name=$1

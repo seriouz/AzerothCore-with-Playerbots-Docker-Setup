@@ -84,17 +84,17 @@ ip_address=$(hostname -I | awk '{print $1}')
 temp_sql_file="/tmp/temp_custom_sql.sql"
 override_file="azerothcore-wotlk/docker-compose.override.yml"
 
-yq eval -i '
-  if .services.ac-database.volumes | index("../database:/var/lib/mysql") == null 
-  then .services.ac-database.volumes += ["../database:/var/lib/mysql"] 
-  else . end
-' "$override_file"
 
-yq eval -i '
-  if .services.ac-worldserver.volumes | index("./modules:/azerothcore/modules") == null 
-  then .services.ac-worldserver.volumes += ["./modules:/azerothcore/modules"] 
-  else . end
-' "$override_file"
+volume_entry1="../database:/var/lib/mysql"
+volume_entry2="./modules:/azerothcore/modules"
+
+if [ -z "$(yq eval ".services.ac-database.volumes[] | select(. == \"$volume_entry1\")" "$override_file")" ]; then
+  yq eval -i ".services.ac-database.volumes += [\"$volume_entry1\"]" "$override_file"
+fi
+
+if [ -z "$(yq eval ".services.ac-worldserver.volumes[] | select(. == \"$volume_entry2\")" "$override_file")" ]; then
+  yq eval -i ".services.ac-worldserver.volumes += [\"$volume_entry2\"]" "$override_file"
+fi
 
 sudo chown -R 1000:1000 azerothcore-wotlk/env/dist/etc azerothcore-wotlk/env/dist/logs
 
@@ -234,11 +234,12 @@ fi
 
 mkdir -p database
 
-yq eval -i '
-  if .services.ac-worldserver.volumes | index("./lua_scripts:/lua_scripts:ro") == null
-  then .services.ac-worldserver.volumes += ["./lua_scripts:/lua_scripts:ro"]
-  else . end
-' "$override_file"
+volume_entry3="./lua_scripts:/lua_scripts:ro"
+
+# Nur hinzufügen, wenn NICHT vorhanden
+if [ -z "$(yq eval ".services.ac-database.volumes[] | select(. == \"$volume_entry3\")" "$override_file")" ]; then
+  yq eval -i ".services.ac-database.volumes += [\"$volume_entry3\"]" "$override_file"
+fi
 
 yq eval -i '
   .services.ac-worldserver.environment += {

@@ -135,7 +135,7 @@ function install_mod() {
 
 function apply_mod_conf() {
     local mod_name="$1"
-    local conf_dir="azerothcore-wotlk/modules/$mod_name/conf"
+    local conf_dir="$mod_name/conf"
     echo "Looking for .conf.dist files in $conf_dir (exists: $( [ -d "$conf_dir" ] && echo yes || echo no ))"
 
     if [ -d "$conf_dir" ]; then

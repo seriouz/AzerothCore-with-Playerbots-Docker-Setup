@@ -275,8 +275,8 @@ yq eval -i '
 ' "$override_file"
 
 yq eval -i '
-  .services.ac-authserver.ports = ["3724:13724"] |
-  .services.ac-worldserver.ports = ["8085:18085"] |
+  .services.ac-authserver.ports = ["13724:3724"] |
+  .services.ac-worldserver.ports = ["18085:8085"] |
   .services.ac-worldserver.deploy.resources.limits.cpus = "5.2"
 ' "$override_file"
 

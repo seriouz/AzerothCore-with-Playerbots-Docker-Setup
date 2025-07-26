@@ -36,7 +36,7 @@ mkdir -p /tmp
 echo $(date +%s) > /tmp/azeroth_last_activity
 log_message "Initial setup complete"
 
-/start-proxy.sh $AUTH_HOST $AUTH_HOST
+/start-proxy.sh $AUTH_HOST $AUTH_PORT
 /start-proxy.sh $WORLD_HOST $WORLD_PORT
 
 # Main loop

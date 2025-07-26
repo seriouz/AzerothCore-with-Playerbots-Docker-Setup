@@ -1,6 +1,6 @@
 FROM alpine:latest
 
-RUN apk add --no-cache socat bash curl jq
+RUN apk add --no-cache socat bash curl jq iproute2
 
 # Copy scripts
 COPY set-container-status.sh /set-container-status.sh

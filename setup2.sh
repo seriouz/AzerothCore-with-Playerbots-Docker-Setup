@@ -1,9 +1,6 @@
 #!/bin/bash
 set -euo pipefail
 
-proxy_dir="proxy"
-proxy_image="azerothcore-proxy"
-
 function ask_user() {
     read -p "$1 (y/n): " choice
     case "$choice" in
@@ -88,6 +85,8 @@ ip_address=$(hostname -I | awk '{print $1}')
 temp_sql_file="/tmp/temp_custom_sql.sql"
 override_file="azerothcore-wotlk/docker-compose.override.yml"
 
+proxy_dir="proxy"
+proxy_image="ac-proxy"
 
 volume_entry1="../database:/var/lib/mysql"
 volume_entry2="./modules:/azerothcore/modules"
@@ -328,9 +327,16 @@ else
 fi
 
 if docker image inspect "$proxy_image" >/dev/null 2>&1; then
+    if docker ps -a --format '{{.Names}}' | grep -qw "$proxy_image"; then
+        echo "▶ Removing existing container $proxy_image..."
+        docker rm -f "$proxy_image"
+    fi
+
     echo "▶ Starting $proxy_image container..."
     docker run -d --name $proxy_image \
-        --network host \
+        -p 3724:3724 \
+        -p 8085:8085 \
+        -v /var/run/docker.sock:/var/run/docker.sock \
         "$proxy_image:latest"
 fi
 

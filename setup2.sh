@@ -214,6 +214,33 @@ function apply_mod_sqls() {
     popd > /dev/null
 }
 
+function modify_compose_ports() {
+    local compose_file="azerothcore-wotlk/docker-compose.yml"
+    local backup_file="${compose_file}.bak"
+
+    echo "🔧 Backup of $compose_file..."
+    cp "$compose_file" "$backup_file"
+
+    echo "🔧 Patch ports for proxy..."
+    yq eval -i '
+      .services.ac-authserver.ports = ["13724:3724"]
+    ' "$compose_file"
+
+    yq eval -i '
+      .services.ac-worldserver.ports = ["7878:7878","18085:8085"]
+    ' "$compose_file"
+}
+
+function restore_compose_file() {
+    local compose_file="azerothcore-wotlk/docker-compose.yml"
+    local backup_file="${compose_file}.bak"
+
+    if [ -f "$backup_file" ]; then
+        echo "♻️  Restore $compose_file ..."
+        mv "$backup_file" "$compose_file"
+    fi
+}
+
 # Modulinstallation
 if ask_user "Install modules?"; then
     cd azerothcore-wotlk/modules
@@ -275,14 +302,14 @@ yq eval -i '
 ' "$override_file"
 
 yq eval -i '
-  .services.ac-authserver.ports = ["13724:3724"] |
-  .services.ac-worldserver.ports = ["18085:8085"] |
   .services.ac-worldserver.deploy.resources.limits.cpus = "5.2"
 ' "$override_file"
 
 sudo chown -R 1000:1000 azerothcore-wotlk/env/dist/etc azerothcore-wotlk/env/dist/logs
 
+modify_compose_ports
 docker compose -f azerothcore-wotlk/docker-compose.yml -f azerothcore-wotlk/docker-compose.override.yml up -d --build
+restore_compose_file
 sudo chown -R 1000:1000 wotlk
 
 # Anwenden der registrierten SQLs

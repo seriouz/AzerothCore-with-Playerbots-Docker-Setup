@@ -227,7 +227,7 @@ if ask_user "Install modules?"; then
     apply_mod_conf "mod-learnspells"
 # TODO SET LearnSpells.Gamemasters = 1
 
-    install_mod "mod-congrats-on-level" "https://github.com/azerothcore/mod-congrats-on-level/.git"
+    install_mod "mod-congrats-on-level" "https://github.com/azerothcore/mod-congrats-on-level.git"
     apply_mod_conf "mod-congrats-on-level"
     register_mod_sqls "mod-congrats-on-level"
 # TODO SETUP rewards

@@ -1,6 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
+proxy_dir="proxy"
+proxy_image="azerothcore-proxy"
+
 function ask_user() {
     read -p "$1 (y/n): " choice
     case "$choice" in
@@ -68,6 +71,7 @@ else
         cp src/*.yml azerothcore-wotlk/
         cd azerothcore-wotlk/modules
         git clone --depth=1 https://github.com/liyunfan1223/mod-playerbots.git --branch=master
+        cp mod-playerbots/conf/playerbots.conf.dist mod-playerbots/conf/playerbots.conf
         cd ../..
         azerothcoredir=$(pwd)/azerothcore-wotlk
     else
@@ -95,6 +99,10 @@ fi
 if [ -z "$(yq eval ".services.ac-worldserver.volumes[] | select(. == \"$volume_entry2\")" "$override_file")" ]; then
   yq eval -i ".services.ac-worldserver.volumes += [\"$volume_entry2\"]" "$override_file"
 fi
+
+
+# TODO Setup PLAYERBOTS IDLE
+
 
 sudo chown -R 1000:1000 azerothcore-wotlk/env/dist/etc azerothcore-wotlk/env/dist/logs
 
@@ -212,22 +220,38 @@ if ask_user "Install modules?"; then
     cd azerothcore-wotlk/modules
 
     install_mod "mod-aoe-loot" "https://github.com/azerothcore/mod-aoe-loot.git"
+    apply_mod_conf "mod-aoe-loot"
+# TODO set worldserver.conf -> Rate.Corpse.Decay.Looted = 0.5
+
     install_mod "mod-learnspells" "https://github.com/noisiver/mod-learnspells.git"
-    install_mod "mod-fireworks-on-level" "https://github.com/azerothcore/mod-fireworks-on-level.git"
+    apply_mod_conf "mod-learnspells"
+# TODO SET LearnSpells.Gamemasters = 1
+
+    install_mod "mod-congrats-on-level" "https://github.com/azerothcore/mod-congrats-on-level/.git"
+    apply_mod_conf "mod-congrats-on-level"
+    register_mod_sqls "mod-congrats-on-level"
+# TODO SETUP rewards
+
     install_mod "mod-ah-bot" "https://github.com/azerothcore/mod-ah-bot.git"
     apply_mod_conf "mod-ah-bot"
     register_mod_sqls "mod-ah-bot"
+# TODO SETUP AH BOT
 
     install_mod "mod-transmog" "https://github.com/azerothcore/mod-transmog.git"
     apply_mod_conf "mod-transmog"
     register_mod_sqls "mod-transmog"
+# TODO place transmog NPC in cities
 
     install_mod "mod-solocraft" "https://github.com/azerothcore/mod-solocraft.git"
     apply_mod_conf "mod-solocraft"
     register_mod_sqls "mod-solocraft"
+# TODO Solocraft.conf einstellen für einfache dungeons
 
     install_mod "mod-eluna" "https://github.com/azerothcore/mod-eluna.git"
+# TODO Taschen verschenken beim login
+
     install_mod "mod-account-mounts" "https://github.com/azerothcore/mod-account-mounts.git"
+    apply_mod_conf "mod-account-mounts"
 
     cd ../..
 fi
@@ -249,6 +273,10 @@ yq eval -i '
     "AC_ELUNA_LOAD_SCRIPTS": "1",
     "AC_ELUNA_LUA_SCRIPTS_PATH": "/lua_scripts"
   }
+' "$override_file"
+
+yq eval -i '
+  .services.ac-worldserver.deploy.resources.limits.cpus = "5.2"
 ' "$override_file"
 
 sudo chown -R 1000:1000 azerothcore-wotlk/env/dist/etc azerothcore-wotlk/env/dist/logs
@@ -289,6 +317,20 @@ execute_sql "$chars"
 rm -f "$temp_sql_file"
 
 docker restart ac-worldserver
+
+if [ -d "$proxy_dir" ]; then
+    echo "🔧 Building $proxy_image container..."
+    docker build -t "$proxy_image:latest" "$proxy_dir"
+else
+    echo "⚠️  Proxy directory $proxy_dir not found - skipping proxy build."
+fi
+
+if docker image inspect "$proxy_image" >/dev/null 2>&1; then
+    echo "▶ Starting $proxy_image container..."
+    docker run -d --name $proxy_image \
+        --network host \
+        "$proxy_image:latest"
+fi
 
 echo ""
 echo "✅ SETUP COMPLETED"

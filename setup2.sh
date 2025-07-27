@@ -150,10 +150,14 @@ function register_mod_sqls() {
 function install_mod() {
     local mod_name=$1
     local repo_url=$2
+    local commit_id=$3
     if [ -d "${mod_name}" ]; then
         echo "📁 ${mod_name} exists. Pulling latest changes..."
         cd "${mod_name}"
         git pull --no-rebase
+        if [ -n "$commit_id" ]; then
+            git checkout $commit_id
+        fi
         cd ..
     else
         if ask_user "Install ${mod_name}?"; then
@@ -274,9 +278,9 @@ if ask_user "Install modules?"; then
     register_mod_sqls "mod-congrats-on-level"
 # TODO SETUP rewards
 
-    # install_mod "mod-ah-bot" "https://github.com/azerothcore/mod-ah-bot.git"
-    # apply_mod_conf "mod-ah-bot"
-    # register_mod_sqls "mod-ah-bot"
+    install_mod "mod-ah-bot" "https://github.com/azerothcore/mod-ah-bot.git" "069773c"
+    apply_mod_conf "mod-ah-bot"
+    register_mod_sqls "mod-ah-bot"
 # TODO SETUP AH BOT
 
     install_mod "mod-transmog" "https://github.com/azerothcore/mod-transmog.git"

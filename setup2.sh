@@ -340,7 +340,7 @@ docker compose -f azerothcore-wotlk/docker-compose.yml -f azerothcore-wotlk/dock
 restore_compose_file
 sudo chown -R 1000:1000 wotlk
 
-docker compose cp ac-worldserver:/azerothcore/env/dist/etc/worldserver.conf ./conf
+docker cp ac-worldserver:/azerothcore/env/dist/etc/worldserver.conf ./conf
 set_worldserverconf_value "Ra.Enable" "1"
 # Nur hinzufügen, wenn NICHT vorhanden
 volume_entry4="../conf/worldserver.conf:/azerothcore/env/dist/etc/worldserver.conf"

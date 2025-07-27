@@ -150,7 +150,7 @@ function register_mod_sqls() {
 function install_mod() {
     local mod_name=$1
     local repo_url=$2
-    local commit_id=$3
+    local commit_id="${3:-}"
     if [ -d "${mod_name}" ]; then
         echo "📁 ${mod_name} exists. Pulling latest changes..."
         cd "${mod_name}"

@@ -84,7 +84,7 @@ mkdir -p /tmp
 echo $(date +%s) > /tmp/azeroth_last_activity
 log_message "Initial setup complete"
 
-echo "$AUTH_HOST:$AUTH_PORT" >> /tmp/proxy-registrations.txt
+# echo "$AUTH_HOST:$AUTH_PORT" >> /tmp/proxy-registrations.txt
 
 /start-proxy.sh
 

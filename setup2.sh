@@ -242,9 +242,9 @@ function modify_compose_ports() {
     cp "$compose_file" "$backup_file"
 
     echo "🔧 Patch ports for proxy..."
-    yq eval -i '
-      .services.ac-authserver.ports = ["13724:3724"]
-    ' "$compose_file"
+    # yq eval -i '
+    #   .services.ac-authserver.ports = ["13724:3724"]
+    # ' "$compose_file"
 }
 
 function restore_compose_file() {
@@ -414,7 +414,6 @@ if docker image inspect "$proxy_image" >/dev/null 2>&1; then
     echo "▶ Starting $proxy_image container..."
     docker run -d --name $proxy_image \
         --network azerothcore-wotlk_ac-network \
-        -p 3724:3724 \
         -v /var/run/docker.sock:/var/run/docker.sock \
         -v ./$proxy_dir/conf.env:/env/conf.env:ro \
         "$proxy_image:latest"

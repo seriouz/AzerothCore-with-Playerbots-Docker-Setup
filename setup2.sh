@@ -398,6 +398,7 @@ if docker image inspect "$proxy_image" >/dev/null 2>&1; then
 
     echo "▶ Starting $proxy_image container..."
     docker run -d --name $proxy_image \
+        --network azerothcore-wotlk_ac-network \
         -p 3724:3724 \
         -p 8085:8085 \
         -v /var/run/docker.sock:/var/run/docker.sock \

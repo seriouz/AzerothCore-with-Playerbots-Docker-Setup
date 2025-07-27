@@ -300,45 +300,45 @@ function execute_sql() {
 }
 
 # Modulinstallation
-if ask_user "Install modules?"; then
-    cd azerothcore-wotlk/modules
+# if ask_user "Install modules?"; then
+#     cd azerothcore-wotlk/modules
 
-    install_mod "mod-aoe-loot" "https://github.com/azerothcore/mod-aoe-loot.git"
-    apply_mod_conf "mod-aoe-loot"
-    # set_worldserverconf_value "Rate.Corpse.Decay.Looted" "0.5"
+#     install_mod "mod-aoe-loot" "https://github.com/azerothcore/mod-aoe-loot.git"
+#     apply_mod_conf "mod-aoe-loot"
+#     # set_worldserverconf_value "Rate.Corpse.Decay.Looted" "0.5"
 
-    install_mod "mod-learnspells" "https://github.com/noisiver/mod-learnspells.git"
-    apply_mod_conf "mod-learnspells"
-# TODO SET LearnSpells.Gamemasters = 1
+#     install_mod "mod-learnspells" "https://github.com/noisiver/mod-learnspells.git"
+#     apply_mod_conf "mod-learnspells"
+# # TODO SET LearnSpells.Gamemasters = 1
 
-    install_mod "mod-congrats-on-level" "https://github.com/azerothcore/mod-congrats-on-level.git"
-    apply_mod_conf "mod-congrats-on-level"
-    register_mod_sqls "mod-congrats-on-level"
-# TODO SETUP rewards
+#     install_mod "mod-congrats-on-level" "https://github.com/azerothcore/mod-congrats-on-level.git"
+#     apply_mod_conf "mod-congrats-on-level"
+#     register_mod_sqls "mod-congrats-on-level"
+# # TODO SETUP rewards
 
-    install_mod "mod-ah-bot" "https://github.com/azerothcore/mod-ah-bot.git" "069773c"
-    apply_mod_conf "mod-ah-bot"
-    register_mod_sqls "mod-ah-bot"
-# TODO SETUP AH BOT
+#     install_mod "mod-ah-bot" "https://github.com/azerothcore/mod-ah-bot.git" "069773c"
+#     apply_mod_conf "mod-ah-bot"
+#     register_mod_sqls "mod-ah-bot"
+# # TODO SETUP AH BOT
 
-    install_mod "mod-transmog" "https://github.com/azerothcore/mod-transmog.git"
-    apply_mod_conf "mod-transmog"
-    register_mod_sqls "mod-transmog"
-# TODO place transmog NPC in cities
+#     install_mod "mod-transmog" "https://github.com/azerothcore/mod-transmog.git"
+#     apply_mod_conf "mod-transmog"
+#     register_mod_sqls "mod-transmog"
+# # TODO place transmog NPC in cities
 
-    install_mod "mod-solocraft" "https://github.com/azerothcore/mod-solocraft.git"
-    apply_mod_conf "mod-solocraft"
-    register_mod_sqls "mod-solocraft"
-# TODO Solocraft.conf einstellen für einfache dungeons
+#     install_mod "mod-solocraft" "https://github.com/azerothcore/mod-solocraft.git"
+#     apply_mod_conf "mod-solocraft"
+#     register_mod_sqls "mod-solocraft"
+# # TODO Solocraft.conf einstellen für einfache dungeons
 
-    install_mod "mod-eluna" "https://github.com/azerothcore/mod-eluna.git"
-# TODO Taschen verschenken beim login
+#     install_mod "mod-eluna" "https://github.com/azerothcore/mod-eluna.git"
+# # TODO Taschen verschenken beim login
 
-    install_mod "mod-account-mounts" "https://github.com/azerothcore/mod-account-mounts.git"
-    apply_mod_conf "mod-account-mounts"
+#     install_mod "mod-account-mounts" "https://github.com/azerothcore/mod-account-mounts.git"
+#     apply_mod_conf "mod-account-mounts"
 
-    cd ../..
-fi
+#     cd ../..
+# fi
 
 mkdir -p database
 
@@ -407,7 +407,7 @@ fi
 if docker image inspect "$proxy_image" >/dev/null 2>&1; then
     if docker ps -a --format '{{.Names}}' | grep -qw "$proxy_image"; then
         echo "▶ Removing existing container $proxy_image..."
-        docker unpause "$proxy_image"
+        # docker unpause "$proxy_image"
         docker rm -f "$proxy_image"
     fi
 

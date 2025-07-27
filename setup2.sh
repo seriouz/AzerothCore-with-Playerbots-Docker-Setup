@@ -266,6 +266,20 @@ function restore_compose_file() {
     fi
 }
 
+function unpause_containers() {
+    local containers=("ac-worldserver" "ac-authserver")
+
+    for c in "${containers[@]}"; do
+        if docker ps -a --format '{{.Names}}' | grep -qw "$c"; then
+            status=$(docker inspect -f '{{.State.Paused}}' "$c")
+            if [ "$status" = "true" ]; then
+                echo "Unpausing container $c..."
+                docker unpause "$c"
+            fi
+        fi
+    done
+}
+
 # Modulinstallation
 if ask_user "Install modules?"; then
     cd azerothcore-wotlk/modules
@@ -336,6 +350,7 @@ sudo chown -R 1000:1000 azerothcore-wotlk/env/dist/etc azerothcore-wotlk/env/dis
 # TODO Setup PLAYERBOTS IDLE
 
 modify_compose_ports
+unpause_containers
 docker compose -f azerothcore-wotlk/docker-compose.yml -f azerothcore-wotlk/docker-compose.override.yml up -d --build
 restore_compose_file
 sudo chown -R 1000:1000 wotlk

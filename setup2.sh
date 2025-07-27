@@ -162,11 +162,6 @@ function apply_mod_conf() {
         while IFS= read -r -d '' conf_file; do
             conf_name="$(basename "$conf_file" .dist)"
 
-            # target_path="$azerothcoredir/env/dist/etc/modules/$conf_name"
-            # mkdir -p "$(dirname "$target_path")"
-            # cp "$conf_file" "$target_path"
-            # echo "→ Copied: $conf_file → $target_path"
-
             local_conf_path="$(dirname "$conf_file")/$conf_name"
             cp "$conf_file" "$local_conf_path"
             echo "→ Renamed copy: $local_conf_path"

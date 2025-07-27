@@ -12,7 +12,6 @@ IDLE_TIMEOUT=300    # 5 minutes (in seconds)
 AUTH_HOST="ac-authserver"
 AUTH_PORT=3724
 WORLD_HOST="ac-worldserver"
-WORLD_PORT=8085
 WORLD_TELNET_PORT=3443
 
 log_message() {

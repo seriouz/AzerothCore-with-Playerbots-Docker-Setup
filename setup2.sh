@@ -307,7 +307,7 @@ fi
 mkdir -p database
 
 volume_entry3="./lua_scripts:/lua_scripts:ro"
-volume_entry4="./env/dist/etc/worldserver.conf:/env/dist/etc/worldserver.conf:ro"
+volume_entry4="./env/dist/etc/worldserver.conf:/env/dist/etc/worldserver.conf"
 
 # Nur hinzufügen, wenn NICHT vorhanden
 if [ -z "$(yq eval ".services.ac-database.volumes[] | select(. == \"$volume_entry3\")" "$override_file")" ]; then

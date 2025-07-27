@@ -274,9 +274,9 @@ if ask_user "Install modules?"; then
     register_mod_sqls "mod-congrats-on-level"
 # TODO SETUP rewards
 
-    install_mod "mod-ah-bot" "https://github.com/azerothcore/mod-ah-bot.git"
-    apply_mod_conf "mod-ah-bot"
-    register_mod_sqls "mod-ah-bot"
+    # install_mod "mod-ah-bot" "https://github.com/azerothcore/mod-ah-bot.git"
+    # apply_mod_conf "mod-ah-bot"
+    # register_mod_sqls "mod-ah-bot"
 # TODO SETUP AH BOT
 
     install_mod "mod-transmog" "https://github.com/azerothcore/mod-transmog.git"

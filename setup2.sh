@@ -278,6 +278,15 @@ function unpause_containers() {
             fi
         fi
     done
+
+    local c="ac-proxy"
+    if docker ps -a --format '{{.Names}}' | grep -qw "$c"; then
+        status=$(docker inspect -f '{{.State.Running}}' "$c")
+        if [ "$status" = "true" ]; then
+            echo "Pausing container $c..."
+            docker pause "$c"
+        fi
+    fi
 }
 
 # Modulinstallation
@@ -408,6 +417,7 @@ fi
 if docker image inspect "$proxy_image" >/dev/null 2>&1; then
     if docker ps -a --format '{{.Names}}' | grep -qw "$proxy_image"; then
         echo "▶ Removing existing container $proxy_image..."
+        docker unpause "$proxy_image"
         docker rm -f "$proxy_image"
     fi
 

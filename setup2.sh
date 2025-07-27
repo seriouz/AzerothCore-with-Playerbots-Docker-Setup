@@ -100,6 +100,25 @@ if [ -z "$(yq eval ".services.ac-worldserver.volumes[] | select(. == \"$volume_e
   yq eval -i ".services.ac-worldserver.volumes += [\"$volume_entry2\"]" "$override_file"
 fi
 
+function set_worldserverconf_value() {
+    local key="$1"
+    local value="$2"
+    local conf_path="$START_PATH/azerothcore-wotlk/env/dist/etc/worldserver.conf"
+
+    if [ ! -f "$conf_path" ]; then
+        echo "⚠️  Config file not found: $conf_path"
+        return 1
+    fi
+
+    if grep -q -E "^\s*${key}\s*=" "$conf_path"; then
+        sed -i "s|^\s*${key}\s*=.*|${key} = ${value}|" "$conf_path"
+        echo "✅ Set: ${key} = ${value}"
+    else
+        echo "➕ Adding: ${key} = ${value}"
+        echo "${key} = ${value}" >> "$conf_path"
+    fi
+}
+
 cp -n ./azerothcore-wotlk/src/server/apps/worldserver/worldserver.conf.dist ./azerothcore-wotlk/env/dist/etc/worldserver.conf
 
 set_worldserverconf_value "Ra.Enable" "1"
@@ -241,25 +260,6 @@ function restore_compose_file() {
     if [ -f "$backup_file" ]; then
         echo "♻️  Restore $compose_file ..."
         mv "$backup_file" "$compose_file"
-    fi
-}
-
-function set_worldserverconf_value() {
-    local key="$1"
-    local value="$2"
-    local conf_path="$START_PATH/azerothcore-wotlk/env/dist/etc/worldserver.conf"
-
-    if [ ! -f "$conf_path" ]; then
-        echo "⚠️  Config file not found: $conf_path"
-        return 1
-    fi
-
-    if grep -q -E "^\s*${key}\s*=" "$conf_path"; then
-        sed -i "s|^\s*${key}\s*=.*|${key} = ${value}|" "$conf_path"
-        echo "✅ Set: ${key} = ${value}"
-    else
-        echo "➕ Adding: ${key} = ${value}"
-        echo "${key} = ${value}" >> "$conf_path"
     fi
 }
 

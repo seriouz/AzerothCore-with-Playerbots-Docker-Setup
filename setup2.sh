@@ -22,6 +22,7 @@ if ! command -v yq &> /dev/null; then
 fi
 
 azerothcoredir=""
+START_PATH=`pwd`
 
 # MariaDB-Client prüfen
 if ! command -v mysql &> /dev/null; then
@@ -99,7 +100,9 @@ if [ -z "$(yq eval ".services.ac-worldserver.volumes[] | select(. == \"$volume_e
   yq eval -i ".services.ac-worldserver.volumes += [\"$volume_entry2\"]" "$override_file"
 fi
 
+cp -n ./azerothcore-wotlk/src/server/apps/worldserver/worldserver.conf.dist ./azerothcore-wotlk/env/dist/etc/worldserver.conf
 
+set_worldserverconf_value "Ra.Enable" "1"
 # TODO Setup PLAYERBOTS IDLE
 
 
@@ -241,13 +244,32 @@ function restore_compose_file() {
     fi
 }
 
+function set_worldserverconf_value() {
+    local key="$1"
+    local value="$2"
+    local conf_path="$START_PATH/azerothcore-wotlk/env/dist/etc/worldserver.conf"
+
+    if [ ! -f "$conf_path" ]; then
+        echo "⚠️  Config file not found: $conf_path"
+        return 1
+    fi
+
+    if grep -q -E "^\s*${key}\s*=" "$conf_path"; then
+        sed -i "s|^\s*${key}\s*=.*|${key} = ${value}|" "$conf_path"
+        echo "✅ Set: ${key} = ${value}"
+    else
+        echo "➕ Adding: ${key} = ${value}"
+        echo "${key} = ${value}" >> "$conf_path"
+    fi
+}
+
 # Modulinstallation
 if ask_user "Install modules?"; then
     cd azerothcore-wotlk/modules
 
     install_mod "mod-aoe-loot" "https://github.com/azerothcore/mod-aoe-loot.git"
     apply_mod_conf "mod-aoe-loot"
-# TODO set worldserver.conf -> Rate.Corpse.Decay.Looted = 0.5
+    set_worldserverconf_value "Rate.Corpse.Decay.Looted" "0.5"
 
     install_mod "mod-learnspells" "https://github.com/noisiver/mod-learnspells.git"
     apply_mod_conf "mod-learnspells"
@@ -285,10 +307,15 @@ fi
 mkdir -p database
 
 volume_entry3="./lua_scripts:/lua_scripts:ro"
+volume_entry4="./env/dist/etc/worldserver.conf:/env/dist/etc/worldserver.conf:ro"
 
 # Nur hinzufügen, wenn NICHT vorhanden
 if [ -z "$(yq eval ".services.ac-database.volumes[] | select(. == \"$volume_entry3\")" "$override_file")" ]; then
   yq eval -i ".services.ac-database.volumes += [\"$volume_entry3\"]" "$override_file"
+fi
+# Nur hinzufügen, wenn NICHT vorhanden
+if [ -z "$(yq eval ".services.ac-worldserver.volumes[] | select(. == \"$volume_entry4\")" "$override_file")" ]; then
+  yq eval -i ".services.ac-worldserver.volumes += [\"$volume_entry4\"]" "$override_file"
 fi
 
 yq eval -i '

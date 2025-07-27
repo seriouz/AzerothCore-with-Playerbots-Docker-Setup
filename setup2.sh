@@ -155,14 +155,18 @@ function install_mod() {
         echo "📁 ${mod_name} exists. Pulling latest changes..."
         cd "${mod_name}"
         git pull --no-rebase
-        if [ -n "$commit_id" ]; then
-            git checkout $commit_id
-        fi
         cd ..
     else
         if ask_user "Install ${mod_name}?"; then
             git clone "${repo_url}" "${mod_name}"
         fi
+    fi
+
+    if [ -n "$commit_id" ]; then
+        echo "📁 ${mod_name} pinned to commit ${commit_id}"
+        cd "${mod_name}"
+        git checkout $commit_id
+        cd ..
     fi
 }
 

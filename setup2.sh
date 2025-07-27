@@ -312,9 +312,9 @@ if [ -z "$(yq eval ".services.ac-database.volumes[] | select(. == \"$volume_entr
   yq eval -i ".services.ac-database.volumes += [\"$volume_entry3\"]" "$override_file"
 fi
 # Nur hinzufügen, wenn NICHT vorhanden
-if [ -z "$(yq eval ".services.ac-worldserver.volumes[] | select(. == \"$volume_entry4\")" "$override_file")" ]; then
-  yq eval -i ".services.ac-worldserver.volumes += [\"$volume_entry4\"]" "$override_file"
-fi
+# if [ -z "$(yq eval ".services.ac-worldserver.volumes[] | select(. == \"$volume_entry4\")" "$override_file")" ]; then
+#   yq eval -i ".services.ac-worldserver.volumes += [\"$volume_entry4\"]" "$override_file"
+# fi
 
 yq eval -i '
   .services.ac-worldserver.environment += {

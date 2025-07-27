@@ -103,7 +103,7 @@ fi
 function set_worldserverconf_value() {
     local key="$1"
     local value="$2"
-    local conf_path="$START_PATH/azerothcore-wotlk/env/dist/etc/worldserver.conf"
+    local conf_path="$START_PATH/conf/worldserver.conf"
 
     if [ ! -f "$conf_path" ]; then
         echo "⚠️  Config file not found: $conf_path"
@@ -304,17 +304,11 @@ fi
 
 mkdir -p database
 
-volume_entry3="./lua_scripts:/lua_scripts:ro"
-volume_entry4="./env/dist/etc/worldserver.conf:/env/dist/etc/worldserver.conf"
-
 # Nur hinzufügen, wenn NICHT vorhanden
+volume_entry3="./lua_scripts:/lua_scripts:ro"
 if [ -z "$(yq eval ".services.ac-database.volumes[] | select(. == \"$volume_entry3\")" "$override_file")" ]; then
   yq eval -i ".services.ac-database.volumes += [\"$volume_entry3\"]" "$override_file"
 fi
-# Nur hinzufügen, wenn NICHT vorhanden
-# if [ -z "$(yq eval ".services.ac-worldserver.volumes[] | select(. == \"$volume_entry4\")" "$override_file")" ]; then
-#   yq eval -i ".services.ac-worldserver.volumes += [\"$volume_entry4\"]" "$override_file"
-# fi
 
 yq eval -i '
   .services.ac-worldserver.environment += {
@@ -334,13 +328,21 @@ sudo chown -R 1000:1000 azerothcore-wotlk/env/dist/etc azerothcore-wotlk/env/dis
 
 # cp -n ./azerothcore-wotlk/src/server/apps/worldserver/worldserver.conf.dist ./azerothcore-wotlk/env/dist/etc/worldserver.conf
 
-# set_worldserverconf_value "Ra.Enable" "1"
 # TODO Setup PLAYERBOTS IDLE
 
 modify_compose_ports
 docker compose -f azerothcore-wotlk/docker-compose.yml -f azerothcore-wotlk/docker-compose.override.yml up -d --build
 restore_compose_file
 sudo chown -R 1000:1000 wotlk
+
+docker compose cp ac-worldserver:/azerothcore/env/dist/etc/worldserver.conf ./conf
+set_worldserverconf_value "Ra.Enable" "1"
+# Nur hinzufügen, wenn NICHT vorhanden
+volume_entry4="../conf/worldserver.conf:/azerothcore/env/dist/etc/worldserver.conf"
+if [ -z "$(yq eval ".services.ac-worldserver.volumes[] | select(. == \"$volume_entry4\")" "$override_file")" ]; then
+  yq eval -i ".services.ac-worldserver.volumes += [\"$volume_entry4\"]" "$override_file"
+fi
+docker compose -f azerothcore-wotlk/docker-compose.yml -f azerothcore-wotlk/docker-compose.override.yml up -d
 
 # Anwenden der registrierten SQLs
 for mod in "${registered_mod_sqls[@]}"; do

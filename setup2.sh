@@ -154,6 +154,7 @@ function install_mod() {
     if [ -d "${mod_name}" ]; then
         echo "📁 ${mod_name} exists. Pulling latest changes..."
         cd "${mod_name}"
+        git checkout master
         git pull --no-rebase
         cd ..
     else

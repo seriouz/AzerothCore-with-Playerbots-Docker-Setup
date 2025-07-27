@@ -119,12 +119,6 @@ function set_worldserverconf_value() {
     fi
 }
 
-cp -n ./azerothcore-wotlk/src/server/apps/worldserver/worldserver.conf.dist ./azerothcore-wotlk/env/dist/etc/worldserver.conf
-
-set_worldserverconf_value "Ra.Enable" "1"
-# TODO Setup PLAYERBOTS IDLE
-
-
 sudo chown -R 1000:1000 azerothcore-wotlk/env/dist/etc azerothcore-wotlk/env/dist/logs
 
 if [ -d "azerothcore-wotlk" ]; then
@@ -269,7 +263,7 @@ if ask_user "Install modules?"; then
 
     install_mod "mod-aoe-loot" "https://github.com/azerothcore/mod-aoe-loot.git"
     apply_mod_conf "mod-aoe-loot"
-    set_worldserverconf_value "Rate.Corpse.Decay.Looted" "0.5"
+    # set_worldserverconf_value "Rate.Corpse.Decay.Looted" "0.5"
 
     install_mod "mod-learnspells" "https://github.com/noisiver/mod-learnspells.git"
     apply_mod_conf "mod-learnspells"
@@ -333,6 +327,11 @@ yq eval -i '
 ' "$override_file"
 
 sudo chown -R 1000:1000 azerothcore-wotlk/env/dist/etc azerothcore-wotlk/env/dist/logs
+
+# cp -n ./azerothcore-wotlk/src/server/apps/worldserver/worldserver.conf.dist ./azerothcore-wotlk/env/dist/etc/worldserver.conf
+
+# set_worldserverconf_value "Ra.Enable" "1"
+# TODO Setup PLAYERBOTS IDLE
 
 modify_compose_ports
 docker compose -f azerothcore-wotlk/docker-compose.yml -f azerothcore-wotlk/docker-compose.override.yml up -d --build

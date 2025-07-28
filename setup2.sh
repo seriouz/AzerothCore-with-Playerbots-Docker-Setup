@@ -299,6 +299,74 @@ function execute_sql() {
     fi
 }
 
+function account_creation() {
+    echo "🔧 Creating AHBot account and character..."
+
+    local ahbot_account="ahbot"
+    local ahbot_password="ahbot123"
+    local ahbot_char_name="Auctioneer"
+    local ahbot_race="1"      # Mensch
+    local ahbot_class="1"     # Krieger
+    local ahbot_gender="0"    # männlich
+
+    # Check if account already exists
+    local account_exists=$(docker exec ac-database mariadb -uroot -ppassword -N -e "
+        SELECT COUNT(*) FROM acore_auth.account WHERE username = '$ahbot_account';")
+
+    if [ "$account_exists" -eq 0 ]; then
+        docker exec -i ac-worldserver sh -c "worldserver --account create $ahbot_account $ahbot_password"
+        docker exec -i ac-worldserver sh -c "worldserver --account set gmlevel $ahbot_account 0 -1"
+        echo "✅ AHBot account created"
+    else
+        echo "ℹ️  AHBot account already exists"
+    fi
+
+    # Get account id
+    local account_id=$(docker exec ac-database mariadb -uroot -ppassword -N -e "
+        SELECT id FROM acore_auth.account WHERE username = '$ahbot_account';")
+
+    if [ -z "$account_id" ]; then
+        echo "❌ Could not retrieve AHBot account ID"
+    else
+        echo "✅ AHBot account ID: $account_id"
+
+        # Check if character already exists
+        char_guid=$(docker exec ac-database mariadb -uroot -ppassword -N -e "
+            SELECT guid FROM acore_characters.characters WHERE name = '$ahbot_char_name';")
+
+        if [ -z "$char_guid" ]; then
+            # Create basic character for AHBot (Elwynn Forest)
+            docker exec ac-database mariadb -uroot -ppassword acore_characters -e "
+                INSERT INTO characters (account, name, race, class, gender, level, position_x, position_y, position_z, map, zone)
+                VALUES ($account_id, '$ahbot_char_name', $ahbot_race, $ahbot_class, $ahbot_gender, 1, -8949.95, -132.493, 83.5312, 0, 12);"
+
+            # Refresh character GUID
+            char_guid=$(docker exec ac-database mariadb -uroot -ppassword -N -e "
+                SELECT guid FROM acore_characters.characters WHERE name = '$ahbot_char_name';")
+
+            echo "✅ AHBot character created"
+        else
+            echo "ℹ️  AHBot character already exists"
+        fi
+
+        if [ -n "$char_guid" ]; then
+            # Insert or update AHBot config (Buyer + Seller for all auction houses)
+            docker exec ac-database mariadb -uroot -ppassword acore_world -e "
+                REPLACE INTO mod_auctionhousebot (house, action, entry) VALUES
+                (1, 'EnableSeller', $char_guid),
+                (1, 'EnableBuyer', $char_guid),
+                (2, 'EnableSeller', $char_guid),
+                (2, 'EnableBuyer', $char_guid),
+                (3, 'EnableSeller', $char_guid),
+                (3, 'EnableBuyer', $char_guid);"
+
+            echo "✅ AHBot is now active on all auction houses"
+        else
+            echo "❌ Failed to create or find AHBot character GUID"
+        fi
+    fi
+}
+
 # Modulinstallation
 # if ask_user "Install modules?"; then
 #     cd azerothcore-wotlk/modules
@@ -418,6 +486,8 @@ if docker image inspect "$proxy_image" >/dev/null 2>&1; then
         -v ./$proxy_dir/conf.env:/env/conf.env:ro \
         "$proxy_image:latest"
 fi
+
+account_creation
 
 echo ""
 echo "✅ SETUP COMPLETED"

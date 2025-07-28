@@ -1,5 +1,6 @@
 #!/bin/bash
 set -euo pipefail
+source .env
 
 function ask_user() {
     read -p "$1 (y/n): " choice
@@ -315,13 +316,18 @@ function account_creation() {
 
     if [ -z "$account_id" ]; then
         # Create account
-        docker exec ac-database mysql -uroot -ppassword -e \
-        "INSERT INTO acore_auth.account (username, sha_pass_hash, email, joindate) VALUES (
-            '$ahbot_account',
-            UPPER(SHA1(CONCAT('$ahbot_account', ':', '$ahbot_password'))),
-            'ahbot@esc.yt',
-            NOW()
-        );"
+        (
+            sleep 1
+            echo "$ADMIN_USER"
+            sleep 1
+            echo "$ADMIN_PASS"
+            sleep 1
+            echo ".account create ahbot ahbot123"
+            sleep 1
+            echo ".account set gmlevel ahbot 0 -1"
+            sleep 1
+            echo "exit"
+        ) | telnet ac-worldserver 3443
 
         account_id=$(docker exec ac-database mysql -uroot -ppassword -N -e \
         "SELECT id FROM acore_auth.account WHERE username = '$ahbot_account';")
@@ -360,6 +366,27 @@ function account_creation() {
         (3, 'EnableBuyer', $char_guid);"
 
         echo "✅ AHBot is now active on all auction houses."
+    fi
+}
+
+function create_admin() {
+    local account_exists=$(docker exec ac-database mysql -uroot -ppassword -N -e \
+        "SELECT id FROM acore_auth.account WHERE username = 'serious';")
+
+    if [ -z "$account_exists" ]; then
+        echo "❌ Admin Account 'serious' nicht gefunden. Bitte erstellen..."
+
+        echo "🔁 Starte worldserver im Vordergrund - bitte führe manuell aus:"
+        echo ""
+        echo "    .account create serious DEINPASSWORT"
+        echo "    .account set gmlevel serious 3 -1"
+        echo ""
+        echo "⌛ Drücke STRG+C sobald 'serious' erstellt wurde."
+
+        sleep 5
+        docker attach ac-worldserver
+    else
+        echo "✅ Admin Account 'serious' bereits vorhanden (ID: $account_exists)"
     fi
 }
 
@@ -412,6 +439,14 @@ if [ -z "$(yq eval ".services.ac-database.volumes[] | select(. == \"$volume_entr
   yq eval -i ".services.ac-database.volumes += [\"$volume_entry3\"]" "$override_file"
 fi
 
+if ! yq eval '.services.ac-worldserver.ports[]' "$override_file" | grep -q '3443:3443'; then
+  yq eval -i '.services.ac-worldserver.ports += ["3443:3443"]' "$override_file"
+  echo "✅ Port 3443 zum worldserver hinzugefügt"
+else
+  echo "ℹ️ Port 3443 ist bereits konfiguriert"
+fi
+
+
 yq eval -i '
   .services.ac-worldserver.environment += {
     "AC_UPDATES_ENABLE_DATABASES", "1",
@@ -434,6 +469,8 @@ unpause_containers
 docker compose -f azerothcore-wotlk/docker-compose.yml -f azerothcore-wotlk/docker-compose.override.yml up -d --build
 restore_compose_file
 sudo chown -R 1000:1000 wotlk
+
+create_admin
 
 docker cp ac-worldserver:/azerothcore/env/dist/etc/worldserver.conf ./conf
 set_worldserverconf_value "Ra.Enable" "1"

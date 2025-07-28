@@ -332,23 +332,48 @@ function account_creation() {
     echo "🔧 Creating AHBot account..."
 
     expect <<EOF
-set timeout 10
-log_user 1
-spawn telnet 127.0.0.1 3443
-expect "Trying 127.0.0.1..."
-expect "Connected to 127.0.0.1."
-expect "Escape character is '^]'."
-expect "Username:"
-send "$ADMIN_USER\r"
-expect "Password:"
-send "$ADMIN_PASS\r"
-expect "AC>"
-send ".account create ahbot ahbot123\r"
-expect "AC>"
-send ".account set gmlevel ahbot 0 -1\r"
-expect "AC>"
-send "exit\r"
-expect eof
+    set timeout 10
+    log_user 1
+
+    spawn telnet 127.0.0.1 3443
+
+    expect {
+        -re "Username: $" {
+            send "$ADMIN_USER\r"
+        }
+        timeout {
+            puts "❌ Timeout: Username prompt nicht empfangen"
+            exit 1
+        }
+    }
+
+    expect {
+        -re "Password: $" {
+            send "$ADMIN_PASS\r"
+        }
+        timeout {
+            puts "❌ Timeout: Password prompt nicht empfangen"
+            exit 1
+        }
+    }
+
+    expect {
+        -re "AC> $" {
+            send ".account create ahbot ahbot123\r"
+        }
+        timeout {
+            puts "❌ Timeout: Kein Prompt nach Login"
+            exit 1
+        }
+    }
+
+    expect "AC>"
+    send ".account set gmlevel ahbot 0 -1\r"
+
+    expect "AC>"
+    send "exit\r"
+
+    expect eof
 EOF
 
         sleep 3

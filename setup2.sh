@@ -14,6 +14,7 @@ function ask_user() {
 sed -i "s|^TZ=.*$|TZ=$(cat /etc/timezone)|" src/.env
 
 sudo apt update
+sudo apt install telnet expect
 
 # yq installieren (wenn nicht vorhanden)
 if ! command -v yq &> /dev/null; then

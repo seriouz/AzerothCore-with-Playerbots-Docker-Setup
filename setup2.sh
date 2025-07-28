@@ -336,6 +336,7 @@ function account_creation() {
     log_user 1
 
     spawn telnet 127.0.0.1 3443
+    sleep 2
 
     expect {
         -re "Username: $" {
@@ -346,6 +347,7 @@ function account_creation() {
             exit 1
         }
     }
+    sleep 1
 
     expect {
         -re "Password: $" {
@@ -356,6 +358,7 @@ function account_creation() {
             exit 1
         }
     }
+    sleep 2
 
     expect {
         -re "AC> $" {
@@ -366,6 +369,7 @@ function account_creation() {
             exit 1
         }
     }
+    sleep 1
 
     expect "AC>"
     send ".account set gmlevel ahbot 0 -1\r"

@@ -336,12 +336,19 @@ function account_creation() {
     "SELECT guid FROM acore_characters.characters WHERE name = '$ahbot_char_name';")
 
     if [ -z "$char_guid" ]; then
-        docker exec ac-database mysql -uroot -ppassword -e "
-        INSERT INTO acore_characters.characters (account, name, race, class, gender, level, position_x, position_y, position_z, map, zone)
-        VALUES ($account_id, '$ahbot_char_name', $ahbot_race, $ahbot_class, $ahbot_gender, 1, -8949.95, -132.493, 83.5312, 0, 12);"
+        docker exec ac-database mysql -uroot -ppassword acore_characters -e "
+        INSERT INTO characters (
+            account, name, race, class, gender, level,
+            position_x, position_y, position_z, map, zone,
+            taximask
+        ) VALUES (
+            $account_id, '$ahbot_char_name', $ahbot_race, $ahbot_class, $ahbot_gender, 1,
+            -8949.95, -132.493, 83.5312, 0, 12,
+            ''
+        );"
 
         char_guid=$(docker exec ac-database mysql -uroot -ppassword -N -e "
-        SELECT guid FROM acore_characters.characters WHERE name = '$ahbot_char_name';")
+            SELECT guid FROM acore_characters.characters WHERE name = '$ahbot_char_name';")
 
         echo "✅ Created AHBot character with GUID $char_guid"
     else

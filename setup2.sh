@@ -318,13 +318,13 @@ function account_creation() {
     if [ -z "$account_id" ]; then
         # Create account
         (
-            sleep 1
+            sleep 5
             echo "$ADMIN_USER"
-            sleep 1
+            sleep 2
             echo "$ADMIN_PASS"
-            sleep 1
+            sleep 4
             echo ".account create ahbot ahbot123"
-            sleep 1
+            sleep 4
             echo ".account set gmlevel ahbot 0 -1"
             sleep 1
             echo "exit"

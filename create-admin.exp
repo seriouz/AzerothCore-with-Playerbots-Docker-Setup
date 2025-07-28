@@ -1,0 +1,10 @@
+#!/usr/bin/expect -f
+
+set timeout 10
+spawn docker attach ac-worldserver
+expect "AC>"
+send ".account create serious password123\n"
+expect "AC>"
+send ".account set gmlevel serious 3 -1\n"
+expect "AC>"
+send "exit\n"

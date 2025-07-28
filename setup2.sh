@@ -381,7 +381,7 @@ function create_admin() {
         echo "    .account create serious DEINPASSWORT"
         echo "    .account set gmlevel serious 3 -1"
         echo ""
-        echo "⌛ Drücke STRG+C sobald 'serious' erstellt wurde."
+        echo "⌛ Drücke STRG+P STRG+Q sobald 'serious' erstellt wurde."
 
         sleep 5
         docker attach ac-worldserver

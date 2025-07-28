@@ -317,21 +317,39 @@ function account_creation() {
 
     if [ -z "$account_id" ]; then
         # Create account
-        (
-            sleep 5
-            echo "$ADMIN_USER"
-            sleep 2
-            echo "$ADMIN_PASS"
-            sleep 4
-            echo ".account create ahbot ahbot123"
-            sleep 4
-            echo ".account set gmlevel ahbot 0 -1"
-            sleep 1
-            echo "exit"
-        ) | telnet localhost 3443
+        # (
+        #     sleep 5
+        #     echo "$ADMIN_USER"
+        #     sleep 2
+        #     echo "$ADMIN_PASS"
+        #     sleep 4
+        #     echo ".account create ahbot ahbot123"
+        #     sleep 4
+        #     echo ".account set gmlevel ahbot 0 -1"
+        #     sleep 1
+        #     echo "exit"
+        # ) | telnet localhost 3443
+    echo "🔧 Creating AHBot account..."
+
+    expect <<EOF
+spawn telnet 127.0.0.1 3443
+expect "Username:"
+send "$ADMIN_USER\r"
+expect "Password:"
+send "$ADMIN_PASS\r"
+expect "AC>"
+send ".account create ahbot ahbot123\r"
+expect "AC>"
+send ".account set gmlevel ahbot 0 -1\r"
+expect "AC>"
+send "exit\r"
+expect eof
+EOF
+
+        sleep 3
 
         account_id=$(docker exec ac-database mysql -uroot -ppassword -N -e \
-        "SELECT id FROM acore_auth.account WHERE username = '$ahbot_account';")
+            "SELECT id FROM acore_auth.account WHERE username = '$ahbot_account';")
 
         echo "✅ Created AHBot account with ID $account_id"
     else

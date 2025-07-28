@@ -374,17 +374,7 @@ function create_admin() {
         "SELECT id FROM acore_auth.account WHERE username = 'serious';")
 
     if [ -z "$account_exists" ]; then
-        echo "❌ Admin Account 'serious' nicht gefunden. Bitte erstellen..."
-
-        echo "🔁 Starte worldserver im Vordergrund - bitte führe manuell aus:"
-        echo ""
-        echo "    .account create serious DEINPASSWORT"
-        echo "    .account set gmlevel serious 3 -1"
-        echo ""
-        echo "⌛ Drücke STRG+P STRG+Q sobald 'serious' erstellt wurde."
-
-        sleep 5
-        docker attach ac-worldserver
+        ./create-admin.exp
     else
         echo "✅ Admin Account 'serious' bereits vorhanden (ID: $account_exists)"
     fi

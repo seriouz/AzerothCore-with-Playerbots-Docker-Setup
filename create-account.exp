@@ -1,0 +1,54 @@
+#!/usr/bin/expect -f
+
+set timeout 10
+log_user 1
+exp_internal 1
+
+# Lese Argumente
+set admin_user [lindex $argv 0]
+set admin_pass [lindex $argv 1]
+set new_account [lindex $argv 2]
+set new_pass [lindex $argv 3]
+
+spawn telnet 127.0.0.1 3443
+sleep 2
+
+expect {
+    -re "Username: $" {
+        send "$admin_user\r"
+    }
+    timeout {
+        puts "❌ Timeout: Username prompt nicht empfangen"
+        exit 1
+    }
+}
+
+expect {
+    -re "Password: $" {
+        send "$admin_pass\r"
+    }
+    timeout {
+        puts "❌ Timeout: Password prompt nicht empfangen"
+        exit 1
+    }
+}
+
+expect {
+    -re "AC>" {
+        send ".account create $new_account $new_pass\r"
+    }
+    timeout {
+        puts "❌ Timeout: Kein Prompt nach Login"
+        exit 1
+    }
+}
+
+expect "AC>"
+send ".account set gmlevel ahbot 0 -1\r"
+
+expect "AC>"
+send "exit\r"
+
+expect eof
+
+

@@ -335,7 +335,9 @@ function account_creation() {
 set timeout 10
 log_user 1
 spawn telnet 127.0.0.1 3443
-after 5000
+expect "Trying 127.0.0.1..."
+expect "Connected to 127.0.0.1."
+expect "Escape character is '^]'."
 expect "Username:"
 send "$ADMIN_USER\r"
 expect "Password:"

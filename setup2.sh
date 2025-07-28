@@ -332,6 +332,8 @@ function account_creation() {
     echo "🔧 Creating AHBot account..."
 
     expect <<EOF
+set timeout 10
+log_user 1
 spawn telnet 127.0.0.1 3443
 expect "Username:"
 send "$ADMIN_USER\r"

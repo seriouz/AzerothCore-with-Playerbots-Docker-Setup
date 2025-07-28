@@ -310,7 +310,7 @@ function account_creation() {
     local ahbot_gender="0"    # männlich
 
     # Check if account already exists
-    local account_exists=$(docker exec ac-database mariadb -uroot -ppassword -N -e "
+    local account_exists=$(docker exec ac-database mysql -uroot -ppassword -N -e "
         SELECT COUNT(*) FROM acore_auth.account WHERE username = '$ahbot_account';")
 
     if [ "$account_exists" -eq 0 ]; then
@@ -322,7 +322,7 @@ function account_creation() {
     fi
 
     # Get account id
-    local account_id=$(docker exec ac-database mariadb -uroot -ppassword -N -e "
+    local account_id=$(docker exec ac-database mysql -uroot -ppassword -N -e "
         SELECT id FROM acore_auth.account WHERE username = '$ahbot_account';")
 
     if [ -z "$account_id" ]; then
@@ -331,17 +331,17 @@ function account_creation() {
         echo "✅ AHBot account ID: $account_id"
 
         # Check if character already exists
-        char_guid=$(docker exec ac-database mariadb -uroot -ppassword -N -e "
+        char_guid=$(docker exec ac-database mysql -uroot -ppassword -N -e "
             SELECT guid FROM acore_characters.characters WHERE name = '$ahbot_char_name';")
 
         if [ -z "$char_guid" ]; then
             # Create basic character for AHBot (Elwynn Forest)
-            docker exec ac-database mariadb -uroot -ppassword acore_characters -e "
+            docker exec ac-database mysql -uroot -ppassword acore_characters -e "
                 INSERT INTO characters (account, name, race, class, gender, level, position_x, position_y, position_z, map, zone)
                 VALUES ($account_id, '$ahbot_char_name', $ahbot_race, $ahbot_class, $ahbot_gender, 1, -8949.95, -132.493, 83.5312, 0, 12);"
 
             # Refresh character GUID
-            char_guid=$(docker exec ac-database mariadb -uroot -ppassword -N -e "
+            char_guid=$(docker exec ac-database mysql -uroot -ppassword -N -e "
                 SELECT guid FROM acore_characters.characters WHERE name = '$ahbot_char_name';")
 
             echo "✅ AHBot character created"
@@ -351,7 +351,7 @@ function account_creation() {
 
         if [ -n "$char_guid" ]; then
             # Insert or update AHBot config (Buyer + Seller for all auction houses)
-            docker exec ac-database mariadb -uroot -ppassword acore_world -e "
+            docker exec ac-database mysql -uroot -ppassword acore_world -e "
                 REPLACE INTO mod_auctionhousebot (house, action, entry) VALUES
                 (1, 'EnableSeller', $char_guid),
                 (1, 'EnableBuyer', $char_guid),

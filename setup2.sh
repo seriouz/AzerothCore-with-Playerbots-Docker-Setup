@@ -328,7 +328,7 @@ function account_creation() {
             echo ".account set gmlevel ahbot 0 -1"
             sleep 1
             echo "exit"
-        ) | telnet ac-worldserver 3443
+        ) | telnet localhost 3443
 
         account_id=$(docker exec ac-database mysql -uroot -ppassword -N -e \
         "SELECT id FROM acore_auth.account WHERE username = '$ahbot_account';")

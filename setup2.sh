@@ -340,11 +340,11 @@ function account_creation() {
         INSERT INTO characters (
             account, name, race, class, gender, level,
             position_x, position_y, position_z, map, zone,
-            taximask
+            taximask, innTriggerId
         ) VALUES (
             $account_id, '$ahbot_char_name', $ahbot_race, $ahbot_class, $ahbot_gender, 1,
             -8949.95, -132.493, 83.5312, 0, 12,
-            ''
+            '', 0
         );"
 
         char_guid=$(docker exec ac-database mysql -uroot -ppassword -N -e "
@@ -375,6 +375,7 @@ function create_admin() {
         "SELECT id FROM acore_auth.account WHERE username = 'serious';")
 
     if [ -z "$account_exists" ]; then
+        chmod +x create-admin.exp
         ./create-admin.exp
     else
         echo "✅ Admin Account 'serious' bereits vorhanden (ID: $account_exists)"

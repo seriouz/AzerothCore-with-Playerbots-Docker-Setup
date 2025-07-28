@@ -336,16 +336,19 @@ function account_creation() {
     "SELECT guid FROM acore_characters.characters WHERE name = '$ahbot_char_name';")
 
     if [ -z "$char_guid" ]; then
+        local next_guid=$(docker exec ac-database mysql -uroot -ppassword -N -e \
+            "SELECT COALESCE(MAX(guid), 0) + 1 FROM acore_characters.characters;");
+
         docker exec ac-database mysql -uroot -ppassword acore_characters -e "
-        INSERT INTO characters (
-            account, name, race, class, gender, level,
-            position_x, position_y, position_z, map, zone,
-            taximask, innTriggerId
-        ) VALUES (
-            $account_id, '$ahbot_char_name', $ahbot_race, $ahbot_class, $ahbot_gender, 1,
-            -8949.95, -132.493, 83.5312, 0, 12,
-            '', 0
-        );"
+            INSERT INTO characters (
+                guid, account, name, race, class, gender, level,
+                position_x, position_y, position_z, map, zone,
+                taximask, innTriggerId
+            ) VALUES (
+                $next_guid, $account_id, '$ahbot_char_name', $ahbot_race, $ahbot_class, $ahbot_gender, 1,
+                -8949.95, -132.493, 83.5312, 0, 12,
+                '', 0
+            );"
 
         char_guid=$(docker exec ac-database mysql -uroot -ppassword -N -e "
             SELECT guid FROM acore_characters.characters WHERE name = '$ahbot_char_name';")
